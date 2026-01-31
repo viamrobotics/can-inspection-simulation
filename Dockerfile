@@ -76,9 +76,6 @@ COPY entrypoint.sh /entrypoint.sh
 COPY entrypoint_station2.sh /entrypoint_station2.sh
 RUN chmod +x /entrypoint.sh /entrypoint_station2.sh
 
-# Copy Viam config
-COPY viam-config.json /opt/viam-config.json
-
 # Expose ports: web viewer (8081), viam-server web (8080), SSH (22), viam-server gRPC (8443)
 EXPOSE 8081 8080 22 8443
 
