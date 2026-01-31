@@ -131,7 +131,7 @@ can-inspection-simulation/
 
 ## Resource Usage
 
-The simulation uses software rendering (no GPU passthrough in Docker), which results in high CPU usage (~650-750% on Mac). This is expected behavior. Shadows and high frame rates have been disabled to reduce load.
+The simulation uses software rendering (no GPU passthrough in Docker), which results in high CPU usage. This is expected behavior. Shadows and high frame rates have been disabled to reduce load.
 
 ## Stopping the Simulation
 
