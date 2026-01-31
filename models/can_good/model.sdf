@@ -1,0 +1,112 @@
+<?xml version="1.0" ?>
+<!--
+  Good Can Model
+
+  Standard aluminum beverage can - undamaged.
+  Dimensions: ~6.5cm diameter, ~12cm height
+-->
+<sdf version="1.9">
+  <model name="can_good">
+    <static>false</static>
+
+    <link name="body">
+      <kinematic>true</kinematic>
+
+      <!-- Main can body -->
+      <visual name="can_body">
+        <geometry>
+          <cylinder>
+            <radius>0.033</radius>
+            <length>0.12</length>
+          </cylinder>
+        </geometry>
+        <material>
+          <ambient>0.7 0.7 0.75 1</ambient>
+          <diffuse>0.8 0.8 0.85 1</diffuse>
+          <specular>0.9 0.9 0.9 1</specular>
+          <pbr>
+            <metal>
+              <metalness>0.9</metalness>
+              <roughness>0.3</roughness>
+            </metal>
+          </pbr>
+        </material>
+      </visual>
+
+      <!-- Top lid -->
+      <visual name="top_lid">
+        <pose>0 0 0.059 0 0 0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.030</radius>
+            <length>0.003</length>
+          </cylinder>
+        </geometry>
+        <material>
+          <ambient>0.6 0.6 0.65 1</ambient>
+          <diffuse>0.7 0.7 0.75 1</diffuse>
+          <specular>0.85 0.85 0.85 1</specular>
+          <pbr>
+            <metal>
+              <metalness>0.95</metalness>
+              <roughness>0.2</roughness>
+            </metal>
+          </pbr>
+        </material>
+      </visual>
+
+      <!-- Bottom -->
+      <visual name="bottom">
+        <pose>0 0 -0.059 0 0 0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.030</radius>
+            <length>0.003</length>
+          </cylinder>
+        </geometry>
+        <material>
+          <ambient>0.6 0.6 0.65 1</ambient>
+          <diffuse>0.7 0.7 0.75 1</diffuse>
+          <specular>0.85 0.85 0.85 1</specular>
+          <pbr>
+            <metal>
+              <metalness>0.95</metalness>
+              <roughness>0.2</roughness>
+            </metal>
+          </pbr>
+        </material>
+      </visual>
+
+      <!-- Label band (colored stripe) -->
+      <visual name="label">
+        <pose>0 0 0 0 0 0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.0335</radius>
+            <length>0.06</length>
+          </cylinder>
+        </geometry>
+        <material>
+          <ambient>0.1 0.3 0.6 1</ambient>
+          <diffuse>0.15 0.4 0.7 1</diffuse>
+          <specular>0.3 0.3 0.3 1</specular>
+          <pbr>
+            <metal>
+              <metalness>0.1</metalness>
+              <roughness>0.5</roughness>
+            </metal>
+          </pbr>
+        </material>
+      </visual>
+
+      <collision name="collision">
+        <geometry>
+          <cylinder>
+            <radius>0.033</radius>
+            <length>0.12</length>
+          </cylinder>
+        </geometry>
+      </collision>
+    </link>
+  </model>
+</sdf>

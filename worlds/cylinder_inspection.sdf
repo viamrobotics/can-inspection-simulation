@@ -1,0 +1,534 @@
+<?xml version="1.0" ?>
+<!--
+  Can Inspection Work Cell
+
+  A stationary vision inspection station for grading beverage cans.
+  - Conveyor belt carries cans past inspection camera
+  - Overhead camera detects dents/damage
+  - Air jet rejector pushes defective cans into reject bin
+  - Good cans continue to output chute
+
+  This world is designed for the Viam stationary vision tutorial.
+-->
+<sdf version="1.9">
+  <world name="cylinder_inspection">
+
+    <!-- ==================== PHYSICS ==================== -->
+    <!-- Reduced from 1000Hz to 100Hz - sufficient for visual inspection demo -->
+    <physics name="10ms" type="ignored">
+      <max_step_size>0.01</max_step_size>
+      <real_time_factor>1.0</real_time_factor>
+      <real_time_update_rate>100</real_time_update_rate>
+    </physics>
+
+    <!-- Required plugins -->
+    <plugin filename="gz-sim-physics-system" name="gz::sim::systems::Physics"/>
+    <plugin filename="gz-sim-scene-broadcaster-system" name="gz::sim::systems::SceneBroadcaster"/>
+    <plugin filename="gz-sim-user-commands-system" name="gz::sim::systems::UserCommands"/>
+    <plugin filename="gz-sim-sensors-system" name="gz::sim::systems::Sensors">
+      <render_engine>ogre2</render_engine>
+    </plugin>
+    <plugin filename="gz-sim-contact-system" name="gz::sim::systems::Contact"/>
+
+    <!-- ==================== SCENE ==================== -->
+    <scene>
+      <ambient>0.6 0.6 0.6 1</ambient>
+      <background>0.2 0.2 0.25 1</background>
+      <shadows>false</shadows>
+    </scene>
+
+    <!-- ==================== LIGHTING ==================== -->
+    <!-- Bright overhead lighting for consistent inspection -->
+    <light type="directional" name="sun">
+      <cast_shadows>false</cast_shadows>
+      <pose>0 0 10 0 0 0</pose>
+      <diffuse>0.9 0.9 0.9 1</diffuse>
+      <specular>0.3 0.3 0.3 1</specular>
+      <direction>-0.2 0.1 -1.0</direction>
+    </light>
+
+    <!-- Fill light to reduce shadows -->
+    <light type="directional" name="fill_light">
+      <cast_shadows>false</cast_shadows>
+      <pose>0 0 8 0 0 0</pose>
+      <diffuse>0.4 0.4 0.4 1</diffuse>
+      <specular>0.1 0.1 0.1 1</specular>
+      <direction>0.3 -0.2 -0.8</direction>
+    </light>
+
+    <!-- Inspection area spot light -->
+    <light type="spot" name="inspection_light">
+      <cast_shadows>false</cast_shadows>
+      <pose>0 0 0.8 0 0 0</pose>
+      <diffuse>1.0 1.0 1.0 1</diffuse>
+      <specular>0.5 0.5 0.5 1</specular>
+      <direction>0 0 -1</direction>
+      <spot>
+        <inner_angle>0.5</inner_angle>
+        <outer_angle>0.8</outer_angle>
+        <falloff>1.0</falloff>
+      </spot>
+    </light>
+
+    <!-- ==================== GROUND ==================== -->
+    <model name="ground_plane">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision">
+          <geometry>
+            <plane>
+              <normal>0 0 1</normal>
+              <size>10 10</size>
+            </plane>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <plane>
+              <normal>0 0 1</normal>
+              <size>10 10</size>
+            </plane>
+          </geometry>
+          <material>
+            <ambient>0.3 0.3 0.3 1</ambient>
+            <diffuse>0.4 0.4 0.4 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- ==================== CONVEYOR STRUCTURE ==================== -->
+    <!-- Main conveyor frame/table -->
+    <model name="conveyor_frame">
+      <static>true</static>
+      <pose>0 0 0 0 0 0</pose>
+
+      <!-- Support legs -->
+      <link name="leg_1">
+        <pose>-0.4 -0.15 0.25 0 0 0</pose>
+        <visual name="visual">
+          <geometry><box><size>0.05 0.05 0.5</size></box></geometry>
+          <material>
+            <ambient>0.5 0.5 0.5 1</ambient>
+            <diffuse>0.6 0.6 0.6 1</diffuse>
+          </material>
+        </visual>
+        <collision name="collision">
+          <geometry><box><size>0.05 0.05 0.5</size></box></geometry>
+        </collision>
+      </link>
+
+      <link name="leg_2">
+        <pose>-0.4 0.15 0.25 0 0 0</pose>
+        <visual name="visual">
+          <geometry><box><size>0.05 0.05 0.5</size></box></geometry>
+          <material>
+            <ambient>0.5 0.5 0.5 1</ambient>
+            <diffuse>0.6 0.6 0.6 1</diffuse>
+          </material>
+        </visual>
+        <collision name="collision">
+          <geometry><box><size>0.05 0.05 0.5</size></box></geometry>
+        </collision>
+      </link>
+
+      <link name="leg_3">
+        <pose>0.4 -0.15 0.25 0 0 0</pose>
+        <visual name="visual">
+          <geometry><box><size>0.05 0.05 0.5</size></box></geometry>
+          <material>
+            <ambient>0.5 0.5 0.5 1</ambient>
+            <diffuse>0.6 0.6 0.6 1</diffuse>
+          </material>
+        </visual>
+        <collision name="collision">
+          <geometry><box><size>0.05 0.05 0.5</size></box></geometry>
+        </collision>
+      </link>
+
+      <link name="leg_4">
+        <pose>0.4 0.15 0.25 0 0 0</pose>
+        <visual name="visual">
+          <geometry><box><size>0.05 0.05 0.5</size></box></geometry>
+          <material>
+            <ambient>0.5 0.5 0.5 1</ambient>
+            <diffuse>0.6 0.6 0.6 1</diffuse>
+          </material>
+        </visual>
+        <collision name="collision">
+          <geometry><box><size>0.05 0.05 0.5</size></box></geometry>
+        </collision>
+      </link>
+
+      <!-- Conveyor belt surface -->
+      <link name="belt">
+        <pose>0 0 0.51 0 0 0</pose>
+        <visual name="visual">
+          <geometry><box><size>2.0 0.3 0.02</size></box></geometry>
+          <material>
+            <ambient>0.1 0.1 0.12 1</ambient>
+            <diffuse>0.15 0.15 0.18 1</diffuse>
+          </material>
+        </visual>
+        <collision name="collision">
+          <geometry><box><size>2.0 0.3 0.02</size></box></geometry>
+          <surface>
+            <friction>
+              <ode>
+                <mu>1.0</mu>
+                <mu2>1.0</mu2>
+              </ode>
+            </friction>
+          </surface>
+        </collision>
+      </link>
+
+      <!-- Side rails -->
+      <link name="rail_left">
+        <pose>0 0.17 0.55 0 0 0</pose>
+        <visual name="visual">
+          <geometry><box><size>2.0 0.02 0.06</size></box></geometry>
+          <material>
+            <ambient>0.6 0.6 0.6 1</ambient>
+            <diffuse>0.7 0.7 0.7 1</diffuse>
+          </material>
+        </visual>
+        <collision name="collision">
+          <geometry><box><size>2.0 0.02 0.06</size></box></geometry>
+        </collision>
+      </link>
+
+      <link name="rail_right">
+        <pose>0 -0.17 0.55 0 0 0</pose>
+        <visual name="visual">
+          <geometry><box><size>2.0 0.02 0.06</size></box></geometry>
+          <material>
+            <ambient>0.6 0.6 0.6 1</ambient>
+            <diffuse>0.7 0.7 0.7 1</diffuse>
+          </material>
+        </visual>
+        <collision name="collision">
+          <geometry><box><size>2.0 0.02 0.06</size></box></geometry>
+        </collision>
+      </link>
+
+      <!-- Camera mount (gantry over conveyor) -->
+      <link name="camera_mount_left">
+        <pose>0 0.25 0.7 0 0 0</pose>
+        <visual name="visual">
+          <geometry><box><size>0.03 0.03 0.4</size></box></geometry>
+          <material>
+            <ambient>0.3 0.3 0.3 1</ambient>
+            <diffuse>0.4 0.4 0.4 1</diffuse>
+          </material>
+        </visual>
+      </link>
+
+      <link name="camera_mount_right">
+        <pose>0 -0.25 0.7 0 0 0</pose>
+        <visual name="visual">
+          <geometry><box><size>0.03 0.03 0.4</size></box></geometry>
+          <material>
+            <ambient>0.3 0.3 0.3 1</ambient>
+            <diffuse>0.4 0.4 0.4 1</diffuse>
+          </material>
+        </visual>
+      </link>
+
+      <link name="camera_crossbar">
+        <pose>0 0 0.92 0 0 0</pose>
+        <visual name="visual">
+          <geometry><box><size>0.04 0.54 0.04</size></box></geometry>
+          <material>
+            <ambient>0.3 0.3 0.3 1</ambient>
+            <diffuse>0.4 0.4 0.4 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- ==================== INSPECTION CAMERA ==================== -->
+    <model name="inspection_camera">
+      <static>true</static>
+      <pose>0 0 0.88 0 1.5708 0</pose>  <!-- Pointing straight down -->
+
+      <link name="camera_body">
+        <visual name="camera_housing">
+          <geometry>
+            <box><size>0.06 0.08 0.05</size></box>
+          </geometry>
+          <material>
+            <ambient>0.1 0.1 0.1 1</ambient>
+            <diffuse>0.15 0.15 0.15 1</diffuse>
+          </material>
+        </visual>
+
+        <visual name="lens">
+          <pose>0 0 -0.03 0 0 0</pose>
+          <geometry>
+            <cylinder>
+              <radius>0.015</radius>
+              <length>0.02</length>
+            </cylinder>
+          </geometry>
+          <material>
+            <ambient>0.02 0.02 0.05 1</ambient>
+            <diffuse>0.05 0.05 0.1 1</diffuse>
+          </material>
+        </visual>
+
+        <sensor name="inspection_cam" type="camera">
+          <pose>0 0 -0.04 0 0 0</pose>
+          <always_on>1</always_on>
+          <update_rate>15</update_rate>
+          <topic>inspection_camera</topic>
+          <camera>
+            <horizontal_fov>1.047</horizontal_fov>  <!-- 60 degrees -->
+            <image>
+              <width>640</width>
+              <height>480</height>
+              <format>R8G8B8</format>
+            </image>
+            <clip>
+              <near>0.1</near>
+              <far>5.0</far>
+            </clip>
+          </camera>
+        </sensor>
+      </link>
+    </model>
+
+    <!-- ==================== OVERVIEW CAMERA ==================== -->
+    <!-- Elevated view of the entire work cell, positioned so cans enter frame already on belt -->
+    <model name="overview_camera">
+      <static>true</static>
+      <!-- Position: side view, centered on inspection/rejection zone -->
+      <!-- Orientation: looking toward belt from the side -->
+      <!-- Roll=0, Pitch=0.5 (tilt down ~29°), Yaw=1.57 (90°, facing +y toward belt) -->
+      <pose>0.1 -0.8 1.0 0 0.5 1.57</pose>
+
+      <link name="camera_body">
+        <visual name="camera_housing">
+          <geometry>
+            <box><size>0.05 0.07 0.04</size></box>
+          </geometry>
+          <material>
+            <ambient>0.15 0.15 0.15 1</ambient>
+            <diffuse>0.2 0.2 0.2 1</diffuse>
+          </material>
+        </visual>
+
+        <visual name="lens">
+          <pose>-0.03 0 0 0 1.5708 0</pose>
+          <geometry>
+            <cylinder>
+              <radius>0.012</radius>
+              <length>0.015</length>
+            </cylinder>
+          </geometry>
+          <material>
+            <ambient>0.02 0.02 0.05 1</ambient>
+            <diffuse>0.05 0.05 0.1 1</diffuse>
+          </material>
+        </visual>
+
+        <sensor name="overview_cam" type="camera">
+          <pose>-0.03 0 0 0 0 0</pose>
+          <always_on>1</always_on>
+          <update_rate>15</update_rate>
+          <topic>overview_camera</topic>
+          <camera>
+            <horizontal_fov>1.22</horizontal_fov>  <!-- ~70 degrees -->
+            <image>
+              <width>800</width>
+              <height>600</height>
+              <format>R8G8B8</format>
+            </image>
+            <clip>
+              <near>0.1</near>
+              <far>10.0</far>
+            </clip>
+          </camera>
+        </sensor>
+      </link>
+    </model>
+
+    <!-- ==================== AIR JET REJECTOR ==================== -->
+    <!-- Visual representation of air jet nozzle -->
+    <model name="air_jet_rejector">
+      <static>true</static>
+      <pose>0.15 -0.2 0.55 0 0 1.5708</pose>  <!-- On right side, pointing left -->
+
+      <link name="nozzle">
+        <visual name="housing">
+          <geometry>
+            <cylinder>
+              <radius>0.02</radius>
+              <length>0.08</length>
+            </cylinder>
+          </geometry>
+          <material>
+            <ambient>0.2 0.2 0.6 1</ambient>
+            <diffuse>0.3 0.3 0.7 1</diffuse>
+          </material>
+        </visual>
+
+        <visual name="nozzle_tip">
+          <pose>0 0 0.05 0 0 0</pose>
+          <geometry>
+            <cone>
+              <radius>0.015</radius>
+              <length>0.03</length>
+            </cone>
+          </geometry>
+          <material>
+            <ambient>0.5 0.5 0.5 1</ambient>
+            <diffuse>0.6 0.6 0.6 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- ==================== REJECT BIN ==================== -->
+    <model name="reject_bin">
+      <static>true</static>
+      <pose>0.15 0.35 0.3 0 0 0</pose>
+
+      <!-- Bin walls (open top box) -->
+      <link name="bin">
+        <!-- Bottom -->
+        <visual name="bottom">
+          <pose>0 0 0 0 0 0</pose>
+          <geometry><box><size>0.25 0.2 0.02</size></box></geometry>
+          <material>
+            <ambient>0.6 0.2 0.2 1</ambient>
+            <diffuse>0.7 0.25 0.25 1</diffuse>
+          </material>
+        </visual>
+        <collision name="bottom_col">
+          <pose>0 0 0 0 0 0</pose>
+          <geometry><box><size>0.25 0.2 0.02</size></box></geometry>
+        </collision>
+
+        <!-- Front wall -->
+        <visual name="front">
+          <pose>0.115 0 0.1 0 0 0</pose>
+          <geometry><box><size>0.02 0.2 0.2</size></box></geometry>
+          <material>
+            <ambient>0.6 0.2 0.2 1</ambient>
+            <diffuse>0.7 0.25 0.25 1</diffuse>
+          </material>
+        </visual>
+        <collision name="front_col">
+          <pose>0.115 0 0.1 0 0 0</pose>
+          <geometry><box><size>0.02 0.2 0.2</size></box></geometry>
+        </collision>
+
+        <!-- Back wall -->
+        <visual name="back">
+          <pose>-0.115 0 0.1 0 0 0</pose>
+          <geometry><box><size>0.02 0.2 0.2</size></box></geometry>
+          <material>
+            <ambient>0.6 0.2 0.2 1</ambient>
+            <diffuse>0.7 0.25 0.25 1</diffuse>
+          </material>
+        </visual>
+        <collision name="back_col">
+          <pose>-0.115 0 0.1 0 0 0</pose>
+          <geometry><box><size>0.02 0.2 0.2</size></box></geometry>
+        </collision>
+
+        <!-- Left wall -->
+        <visual name="left">
+          <pose>0 0.09 0.1 0 0 0</pose>
+          <geometry><box><size>0.25 0.02 0.2</size></box></geometry>
+          <material>
+            <ambient>0.6 0.2 0.2 1</ambient>
+            <diffuse>0.7 0.25 0.25 1</diffuse>
+          </material>
+        </visual>
+        <collision name="left_col">
+          <pose>0 0.09 0.1 0 0 0</pose>
+          <geometry><box><size>0.25 0.02 0.2</size></box></geometry>
+        </collision>
+
+        <!-- Right wall (lower, acts as chute entry) -->
+        <visual name="right">
+          <pose>0 -0.09 0.05 0 0 0</pose>
+          <geometry><box><size>0.25 0.02 0.1</size></box></geometry>
+          <material>
+            <ambient>0.6 0.2 0.2 1</ambient>
+            <diffuse>0.7 0.25 0.25 1</diffuse>
+          </material>
+        </visual>
+        <collision name="right_col">
+          <pose>0 -0.09 0.05 0 0 0</pose>
+          <geometry><box><size>0.25 0.02 0.1</size></box></geometry>
+        </collision>
+
+        <!-- Label -->
+        <visual name="label">
+          <pose>0.125 0 0.15 0 0 1.5708</pose>
+          <geometry><box><size>0.1 0.001 0.04</size></box></geometry>
+          <material>
+            <ambient>0.9 0.9 0.9 1</ambient>
+            <diffuse>1.0 1.0 1.0 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- ==================== OUTPUT CHUTE ==================== -->
+    <model name="output_chute">
+      <static>true</static>
+      <pose>1.1 0 0.45 0 0.2 0</pose>  <!-- Slightly angled down, at belt end -->
+
+      <link name="chute">
+        <!-- Bottom surface -->
+        <visual name="surface">
+          <geometry><box><size>0.3 0.25 0.01</size></box></geometry>
+          <material>
+            <ambient>0.2 0.5 0.2 1</ambient>
+            <diffuse>0.25 0.6 0.25 1</diffuse>
+          </material>
+        </visual>
+        <collision name="surface_col">
+          <geometry><box><size>0.3 0.25 0.01</size></box></geometry>
+        </collision>
+
+        <!-- Side rails -->
+        <visual name="rail_left">
+          <pose>0 0.12 0.025 0 0 0</pose>
+          <geometry><box><size>0.3 0.02 0.04</size></box></geometry>
+          <material>
+            <ambient>0.2 0.5 0.2 1</ambient>
+            <diffuse>0.25 0.6 0.25 1</diffuse>
+          </material>
+        </visual>
+        <collision name="rail_left_col">
+          <pose>0 0.12 0.025 0 0 0</pose>
+          <geometry><box><size>0.3 0.02 0.04</size></box></geometry>
+        </collision>
+
+        <visual name="rail_right">
+          <pose>0 -0.12 0.025 0 0 0</pose>
+          <geometry><box><size>0.3 0.02 0.04</size></box></geometry>
+          <material>
+            <ambient>0.2 0.5 0.2 1</ambient>
+            <diffuse>0.25 0.6 0.25 1</diffuse>
+          </material>
+        </visual>
+        <collision name="rail_right_col">
+          <pose>0 -0.12 0.025 0 0 0</pose>
+          <geometry><box><size>0.3 0.02 0.04</size></box></geometry>
+        </collision>
+      </link>
+    </model>
+
+    <!-- ==================== DYNAMIC CANS ==================== -->
+    <!-- Cans are spawned dynamically by can_spawner.py -->
+    <!-- About 1 in 10 cans will be dented -->
+    <!-- The spawner moves cans along the belt and removes them at the end -->
+
+  </world>
+</sdf>
