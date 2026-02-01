@@ -58,21 +58,7 @@ class Can:
         self.dented = dented
         self.x_pos = x_pos
         self.y_offset = random.uniform(-Y_VARIATION, Y_VARIATION)
-
-    def advance(self, distance: float) -> bool:
-        """
-        Move the can forward by the given distance.
-        Returns True if the can recycled (reached end of belt).
-        """
-        self.x_pos += distance
-
-        if self.x_pos > BELT_END_X:
-            # Recycle: teleport back to start
-            self.x_pos = BELT_START_X
-            self.y_offset = random.uniform(-Y_VARIATION, Y_VARIATION)
-            return True
-
-        return False
+        self.waiting_to_recycle = False
 
 
 class CanPool:
@@ -139,12 +125,35 @@ class CanPool:
         distance = BELT_SPEED * delta_time
 
         with self.lock:
+            # Pass 1: Advance all active cans, mark those needing recycle
             for can in self.cans:
-                recycled = can.advance(distance)
-                if recycled:
-                    log(f"{can.name} recycled")
+                if not can.waiting_to_recycle:
+                    can.x_pos += distance
+                    if can.x_pos > BELT_END_X:
+                        can.waiting_to_recycle = True
 
-                self._set_can_position(can)
+            # Pass 2: Recycle at most ONE waiting can if space available
+            if self._space_available_at_start():
+                for can in self.cans:
+                    if can.waiting_to_recycle:
+                        can.x_pos = BELT_START_X
+                        can.y_offset = random.uniform(-Y_VARIATION, Y_VARIATION)
+                        can.waiting_to_recycle = False
+                        log(f"{can.name} recycled")
+                        break  # Only one per cycle
+
+            # Pass 3: Update positions in Gazebo (skip waiting cans)
+            for can in self.cans:
+                if not can.waiting_to_recycle:
+                    self._set_can_position(can)
+
+    def _space_available_at_start(self):
+        """Check if there's room to recycle a can at the belt start."""
+        active_cans = [c for c in self.cans if not c.waiting_to_recycle]
+        if not active_cans:
+            return True  # No active cans, safe to recycle
+        min_x = min(c.x_pos for c in active_cans)
+        return min_x > BELT_START_X + CAN_SPACING
 
     def _set_can_position(self, can: Can):
         """Update a can's position in Gazebo using gz-transport."""
