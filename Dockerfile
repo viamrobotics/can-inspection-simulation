@@ -78,6 +78,8 @@ ENV GZ_SIM_RESOURCE_PATH=/opt/models
 
 # Copy web viewer, spawner, and training capture script
 COPY web_viewer.py /opt/web_viewer.py
+COPY templates/ /opt/templates/
+COPY static/ /opt/static/
 COPY can_spawner.py /opt/can_spawner.py
 COPY capture_training_data.py /opt/capture_training_data.py
 
