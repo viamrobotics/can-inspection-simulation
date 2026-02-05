@@ -19,6 +19,8 @@ import json
 import signal
 from flask import Flask, Response, request, render_template, redirect, url_for, flash, jsonify
 import psutil
+import requests
+import urllib3
 
 from gz.transport13 import Node
 from gz.msgs10.image_pb2 import Image as GzImage
@@ -302,16 +304,22 @@ def update_config():
 
 
 def is_viam_server_running():
-    """Check if viam-server process is running."""
+    """Check if viam-server is running via health check endpoint."""
     try:
-        for proc in psutil.process_iter(['name', 'cmdline']):
-            cmdline = proc.info.get('cmdline') or []
-            cmdline_str = ' '.join(cmdline)
-            if 'viam-server' in cmdline_str and '-config' in cmdline_str:
-                return True
-        return False
+        # Disable SSL warnings for self-signed cert
+        urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+        # Query health endpoint with SSL verification disabled
+        response = requests.get(
+            'https://localhost:8080/',
+            verify=False,
+            timeout=2
+        )
+
+        # Check if response is 200 with body "healthy"
+        return response.status_code == 200 and response.text == 'healthy'
     except Exception as e:
-        print(f"Error checking viam-server status: {e}")
+        # If health check fails (connection refused, timeout, etc), server is not running
         return False
 
 

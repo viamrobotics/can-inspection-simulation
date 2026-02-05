@@ -38,7 +38,7 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Python dependencies for Viam module and web viewer
-RUN pip3 install viam-sdk Pillow flask numpy psutil
+RUN pip3 install viam-sdk Pillow flask numpy psutil requests urllib3
 
 # Install ffmpeg for video streaming support
 RUN apt-get update && apt-get install -y \
