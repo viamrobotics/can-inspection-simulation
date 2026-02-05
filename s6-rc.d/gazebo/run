@@ -1,9 +1,0 @@
-#!/command/execlineb -P
-export DISPLAY :1
-export PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION python
-export GZ_WORLD_NAME cylinder_inspection
-export GZ_STATION_NAME "Station 1"
-export GZ_OVERVIEW_TOPIC /overview_camera
-export GZ_INSPECTION_TOPIC /inspection_camera
-foreground { sleep 2 }
-gz sim -s /opt/worlds/cylinder_inspection.sdf

@@ -5,14 +5,10 @@ ENV DEBIAN_FRONTEND=noninteractive
 # Required for protobuf compatibility with gz-msgs
 ENV PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
 
-RUN apt-get update && apt-get install xz-utils
-
-# Install s6-overlay for process supervision
-ARG S6_OVERLAY_VERSION=3.1.6.2
-ADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-noarch.tar.xz /tmp
-RUN tar -C / -Jxpf /tmp/s6-overlay-noarch.tar.xz
-ADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-x86_64.tar.xz /tmp
-RUN tar -C / -Jxpf /tmp/s6-overlay-x86_64.tar.xz
+RUN apt-get update && apt-get install -y \
+    supervisor \
+    && mkdir -p /var/log/supervisor \
+    && rm -rf /var/lib/apt/lists/*
 
 # Install Gazebo Harmonic
 RUN apt-get update && apt-get install -y \
@@ -85,14 +81,13 @@ COPY web_viewer.py /opt/web_viewer.py
 COPY can_spawner.py /opt/can_spawner.py
 COPY capture_training_data.py /opt/capture_training_data.py
 
-# Copy s6 service definitions
-COPY s6-rc.d/ /etc/s6-overlay/s6-rc.d/
-RUN chmod +x /etc/s6-overlay/s6-rc.d/*/run 2>/dev/null || true
+# Copy supervisord configuration
+COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 # Expose ports: web viewer (8081), viam-server web (8080), SSH (22), viam-server gRPC (8443)
 EXPOSE 8081 8080 22 8443
 
 WORKDIR /opt
 
-# Use s6-overlay as the entrypoint
-ENTRYPOINT ["/init"]
+# Use supervisord as the entrypoint
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]

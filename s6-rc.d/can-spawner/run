@@ -1,3 +1,0 @@
-#!/command/execlineb -P
-foreground { sleep 10 }
-python3 /opt/can_spawner.py

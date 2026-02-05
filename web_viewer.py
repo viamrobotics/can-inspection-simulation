@@ -305,19 +305,18 @@ def is_viam_server_running():
 
 def restart_viam_server():
     """
-    Restart viam-server by sending a signal to s6-overlay.
-    This uses s6-svc to restart the viam-server service.
+    Restart viam-server using supervisorctl.
+    This uses supervisorctl to restart the viam-server service.
     """
     try:
-        # Use s6-svc to restart the viam-server service
-        # -r restarts the service, -d brings it down, -u brings it up
-        subprocess.run(['/command/s6-svc', '-r', '/run/service/viam-server'],
+        # Use supervisorctl to restart the viam-server service
+        subprocess.run(['supervisorctl', 'restart', 'viam-server'],
                       check=True, timeout=5)
-        print("Sent restart signal to viam-server via s6")
+        print("Sent restart signal to viam-server via supervisorctl")
     except subprocess.TimeoutExpired:
-        print("Warning: s6-svc command timed out")
+        print("Warning: supervisorctl command timed out")
     except subprocess.CalledProcessError as e:
-        print(f"Error restarting viam-server via s6: {e}")
+        print(f"Error restarting viam-server via supervisorctl: {e}")
         # Fallback: try to kill the process directly
         try:
             for proc in psutil.process_iter(['name', 'cmdline', 'pid']):
