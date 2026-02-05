@@ -3,6 +3,7 @@
 <head>
     <title>Viam Configuration</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/config.css') }}">
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
 </head>
 <body>
     <div class="nav">
@@ -21,8 +22,11 @@
         {% endif %}
     {% endwith %}
 
-    <div class="status {{ 'running' if viam_running else 'stopped' }}">
-        <strong>Viam Server Status:</strong> {{ 'Running' if viam_running else 'Stopped' }}
+    <div class="status stopped"
+         hx-get="/api/viam-running"
+         hx-trigger="load, every 1s"
+         hx-swap="outerHTML">
+        <strong>Viam Server Status:</strong> Loading...
     </div>
 
     <div class="form-container">

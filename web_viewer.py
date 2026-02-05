@@ -17,7 +17,7 @@ import threading
 import subprocess
 import json
 import signal
-from flask import Flask, Response, request, render_template, redirect, url_for, flash
+from flask import Flask, Response, request, render_template, redirect, url_for, flash, jsonify
 import psutil
 
 from gz.transport13 import Node
@@ -248,13 +248,22 @@ def config_page():
         except Exception as e:
             flash(f'Error reading config: {e}', 'error')
 
-    # Check if viam-server is running
-    viam_running = is_viam_server_running()
-
     return render_template('config.html',
                          current_config=current_config,
-                         config_exists=config_exists,
-                         viam_running=viam_running)
+                         config_exists=config_exists)
+
+
+@app.route('/api/viam-running')
+def api_viam_running():
+    """API endpoint to check if viam-server is running (for live status updates)."""
+    running = is_viam_server_running()
+    status_class = 'running' if running else 'stopped'
+    status_text = 'Running' if running else 'Stopped'
+
+    # Return HTML fragment for HTMX to swap in
+    return f'''<div class="status {status_class}">
+        <strong>Viam Server Status:</strong> {status_text}
+    </div>'''
 
 
 @app.route('/config/update', methods=['POST'])
