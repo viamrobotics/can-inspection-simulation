@@ -260,8 +260,11 @@ def api_viam_running():
     status_class = 'running' if running else 'stopped'
     status_text = 'Running' if running else 'Stopped'
 
-    # Return HTML fragment for HTMX to swap in
-    return f'''<div class="status {status_class}">
+    # Return HTML fragment with HTMX attributes preserved for continued polling
+    return f'''<div class="status {status_class}"
+         hx-get="/api/viam-running"
+         hx-trigger="every 1s"
+         hx-swap="outerHTML">
         <strong>Viam Server Status:</strong> {status_text}
     </div>'''
 
