@@ -1,0 +1,24 @@
+[tool.ruff]
+# Minimal configuration - catch egregious errors only
+
+# Enable only critical error detection
+lint.select = [
+    "E",   # pycodestyle errors
+    "F",   # pyflakes (undefined names, unused imports, etc.)
+]
+
+# Ignore style/formatting issues
+lint.ignore = [
+    "E501",  # line too long
+    "E402",  # module level import not at top of file
+]
+
+# Exclude directories
+exclude = [
+    ".git",
+    "__pycache__",
+    "build",
+    "dist",
+    ".venv",
+    "venv",
+]

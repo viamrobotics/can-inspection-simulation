@@ -83,11 +83,6 @@ COPY web_viewer.py /opt/web_viewer.py
 COPY can_spawner.py /opt/can_spawner.py
 COPY capture_training_data.py /opt/capture_training_data.py
 
-# Copy startup scripts (kept for compatibility/reference)
-COPY entrypoint.sh /entrypoint.sh
-COPY entrypoint_station2.sh /entrypoint_station2.sh
-RUN chmod +x /entrypoint.sh /entrypoint_station2.sh
-
 # Copy s6 service definitions
 COPY s6-rc.d/ /etc/s6-overlay/s6-rc.d/
 RUN chmod +x /etc/s6-overlay/s6-rc.d/*/run 2>/dev/null || true

@@ -108,12 +108,7 @@ When the configuration is updated:
 
 ## Migration from Old Entrypoint
 
-The old `entrypoint.sh` is still present in the container but is no longer used. The new entrypoint is `/init` (from s6-overlay).
-
-If you need to run the old entrypoint for debugging:
-```bash
-docker run -it --entrypoint /entrypoint.sh <image>
-```
+The old `entrypoint.sh` has been removed from the codebase (as of task 17a). The container now exclusively uses `/init` (from s6-overlay) as the entrypoint.
 
 ## Troubleshooting
 

@@ -27,7 +27,7 @@ and is mounted to /etc/viam.json where viam-server expects it.
 
 2. PREVENTING EXTRA CANS IN IMAGES (CRITICAL)
 ---------------------------------------------
-The entrypoint.sh starts can_spawner.py automatically, which continuously
+The container starts can_spawner.py automatically via s6-overlay, which continuously
 spawns cans on the conveyor belt. These will appear in training images!
 
 IMMEDIATELY after the container starts (~10-15 sec for Gazebo to initialize),

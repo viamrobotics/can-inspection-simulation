@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Viam Configuration</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/config.css') }}">
+</head>
+<body>
+    <div class="nav">
+        <a href="/">← Back to Camera Viewer</a>
+        <a href="/config">Configuration</a>
+    </div>
+
+    <h1>Viam Configuration</h1>
+    <p class="subtitle">Update viam.json credentials</p>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="flash {{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="status {{ 'running' if viam_running else 'stopped' }}">
+        <strong>Viam Server Status:</strong> {{ 'Running' if viam_running else 'Stopped' }}
+    </div>
+
+    <div class="form-container">
+        <form method="POST" action="/config/update">
+            <label for="config">Viam Configuration (viam.json)</label>
+            <textarea name="config" id="config" required>{{ current_config }}</textarea>
+
+            <div class="button-group">
+                <button type="submit">Update and Restart</button>
+                <button type="button" class="secondary" onclick="validateJSON()">Validate JSON</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="help">
+        <h3>Instructions</h3>
+        <ul>
+            <li>Paste your <code>viam.json</code> configuration from the Viam app</li>
+            <li>Click "Validate JSON" to check for syntax errors</li>
+            <li>Click "Update and Restart" to save changes and restart the Viam server</li>
+            <li>The server will automatically restart with the new credentials</li>
+        </ul>
+    </div>
+
+    <script>
+        function validateJSON() {
+            const textarea = document.getElementById('config');
+            try {
+                JSON.parse(textarea.value);
+                alert('JSON is valid!');
+            } catch (e) {
+                alert('Invalid JSON: ' + e.message);
+            }
+        }
+    </script>
+</body>
+</html>

@@ -17,7 +17,7 @@ import threading
 import subprocess
 import json
 import signal
-from flask import Flask, Response, request, render_template_string, redirect, url_for, flash
+from flask import Flask, Response, request, render_template, redirect, url_for, flash
 import psutil
 
 from gz.transport13 import Node
@@ -185,123 +185,18 @@ def generate_video_stream(camera_key):
             pass
 
 
-def generate_html():
-    """Generate the HTML page from the CAMERAS config."""
-    camera_cards = []
-    for key, cam in CAMERAS.items():
-        card = f'''
-        <div class="camera-card">
-            <div class="camera-header">
-                <span>{cam["label"]}</span>
-                <span class="topic">{cam["topic"]}</span>
-            </div>
-            <div class="camera-feed">
-                <img src="/stream/{key}" alt="{cam["label"]}">
-            </div>
-            <div class="camera-description">{cam["description"]}</div>
-        </div>'''
-        camera_cards.append(card)
-
-    title = f"Can Inspection - {STATION_NAME}" if STATION_NAME else "Can Inspection Station"
-    heading = f"Can Inspection {STATION_NAME}" if STATION_NAME else "Can Inspection Station"
-
-    return f'''<!DOCTYPE html>
-<html>
-<head>
-    <title>{title}</title>
-    <style>
-        body {{
-            background: #1a1a1a;
-            color: #fff;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            margin: 0;
-            padding: 20px;
-        }}
-        .nav {{
-            text-align: right;
-            margin-bottom: 10px;
-        }}
-        .nav a {{
-            color: #4a9eff;
-            text-decoration: none;
-            padding: 8px 16px;
-            border: 1px solid #4a9eff;
-            border-radius: 4px;
-            font-size: 14px;
-            transition: all 0.2s;
-        }}
-        .nav a:hover {{
-            background: #4a9eff;
-            color: #1a1a1a;
-        }}
-        h1 {{
-            text-align: center;
-            margin-bottom: 5px;
-            font-weight: 400;
-        }}
-        .subtitle {{
-            text-align: center;
-            color: #888;
-            margin-bottom: 30px;
-        }}
-        .camera-grid {{
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-            gap: 20px;
-            max-width: 1400px;
-            margin: 0 auto;
-        }}
-        .camera-card {{
-            background: #252525;
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-        }}
-        .camera-header {{
-            padding: 12px 16px;
-            background: #333;
-            font-size: 14px;
-            font-weight: 500;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }}
-        .camera-header .topic {{
-            color: #888;
-            font-family: monospace;
-            font-size: 11px;
-        }}
-        .camera-feed {{
-            background: #000;
-        }}
-        .camera-feed img {{
-            display: block;
-            width: 100%;
-            height: auto;
-        }}
-        .camera-description {{
-            padding: 10px 16px;
-            font-size: 12px;
-            color: #888;
-        }}
-    </style>
-</head>
-<body>
-    <div class="nav">
-        <a href="/config">⚙ Configuration</a>
-    </div>
-    <h1>{heading}</h1>
-    <p class="subtitle">Simulated conveyor belt inspection system</p>
-    <div class="camera-grid">
-        {"".join(camera_cards)}
-    </div>
-</body>
-</html>'''
 
 
 @app.route('/')
 def index():
-    return generate_html()
+    """Display the main camera viewer page."""
+    title = f"Can Inspection - {STATION_NAME}" if STATION_NAME else "Can Inspection Station"
+    heading = f"Can Inspection {STATION_NAME}" if STATION_NAME else "Can Inspection Station"
+
+    return render_template('index.html',
+                         title=title,
+                         heading=heading,
+                         cameras=CAMERAS)
 
 
 @app.route('/stream/<camera>')
@@ -356,10 +251,10 @@ def config_page():
     # Check if viam-server is running
     viam_running = is_viam_server_running()
 
-    return render_template_string(CONFIG_PAGE_TEMPLATE,
-                                 current_config=current_config,
-                                 config_exists=config_exists,
-                                 viam_running=viam_running)
+    return render_template('config.html',
+                         current_config=current_config,
+                         config_exists=config_exists,
+                         viam_running=viam_running)
 
 
 @app.route('/config/update', methods=['POST'])
@@ -445,199 +340,6 @@ def restart_viam_server():
             print(f"Error in fallback kill: {e2}")
     except Exception as e:
         print(f"Unexpected error restarting viam-server: {e}")
-
-
-# HTML template for the config page
-CONFIG_PAGE_TEMPLATE = '''<!DOCTYPE html>
-<html>
-<head>
-    <title>Viam Configuration</title>
-    <style>
-        body {
-            background: #1a1a1a;
-            color: #fff;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            margin: 0;
-            padding: 20px;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-        h1 {
-            margin-bottom: 5px;
-            font-weight: 400;
-        }
-        .subtitle {
-            color: #888;
-            margin-bottom: 30px;
-        }
-        .nav {
-            margin-bottom: 20px;
-        }
-        .nav a {
-            color: #4a9eff;
-            text-decoration: none;
-            margin-right: 20px;
-        }
-        .nav a:hover {
-            text-decoration: underline;
-        }
-        .status {
-            padding: 10px 15px;
-            border-radius: 4px;
-            margin-bottom: 20px;
-        }
-        .status.running {
-            background: #1a4d2e;
-            border-left: 4px solid #28a745;
-        }
-        .status.stopped {
-            background: #4d1a1a;
-            border-left: 4px solid #dc3545;
-        }
-        .form-container {
-            background: #252525;
-            border-radius: 8px;
-            padding: 30px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-        }
-        label {
-            display: block;
-            margin-bottom: 10px;
-            font-weight: 500;
-        }
-        textarea {
-            width: 100%;
-            min-height: 400px;
-            background: #1a1a1a;
-            color: #fff;
-            border: 1px solid #444;
-            border-radius: 4px;
-            padding: 15px;
-            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-            font-size: 13px;
-            line-height: 1.5;
-            resize: vertical;
-            box-sizing: border-box;
-        }
-        textarea:focus {
-            outline: none;
-            border-color: #4a9eff;
-        }
-        .button-group {
-            margin-top: 20px;
-            display: flex;
-            gap: 10px;
-        }
-        button {
-            background: #4a9eff;
-            color: #fff;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 4px;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-        button:hover {
-            background: #357abd;
-        }
-        button.secondary {
-            background: #444;
-        }
-        button.secondary:hover {
-            background: #555;
-        }
-        .flash {
-            padding: 12px 20px;
-            border-radius: 4px;
-            margin-bottom: 20px;
-        }
-        .flash.success {
-            background: #1a4d2e;
-            border-left: 4px solid #28a745;
-        }
-        .flash.error {
-            background: #4d1a1a;
-            border-left: 4px solid #dc3545;
-        }
-        .help {
-            margin-top: 20px;
-            padding: 15px;
-            background: #2a2a2a;
-            border-radius: 4px;
-            font-size: 13px;
-            color: #888;
-        }
-        .help h3 {
-            margin-top: 0;
-            color: #fff;
-            font-size: 14px;
-        }
-        .help code {
-            background: #1a1a1a;
-            padding: 2px 6px;
-            border-radius: 3px;
-            font-family: monospace;
-        }
-    </style>
-</head>
-<body>
-    <div class="nav">
-        <a href="/">← Back to Camera Viewer</a>
-        <a href="/config">Configuration</a>
-    </div>
-
-    <h1>Viam Configuration</h1>
-    <p class="subtitle">Update viam.json credentials</p>
-
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            {% for category, message in messages %}
-                <div class="flash {{ category }}">{{ message }}</div>
-            {% endfor %}
-        {% endif %}
-    {% endwith %}
-
-    <div class="status {{ 'running' if viam_running else 'stopped' }}">
-        <strong>Viam Server Status:</strong> {{ 'Running' if viam_running else 'Stopped' }}
-    </div>
-
-    <div class="form-container">
-        <form method="POST" action="/config/update">
-            <label for="config">Viam Configuration (viam.json)</label>
-            <textarea name="config" id="config" required>{{ current_config }}</textarea>
-
-            <div class="button-group">
-                <button type="submit">Update and Restart</button>
-                <button type="button" class="secondary" onclick="validateJSON()">Validate JSON</button>
-            </div>
-        </form>
-    </div>
-
-    <div class="help">
-        <h3>Instructions</h3>
-        <ul>
-            <li>Paste your <code>viam.json</code> configuration from the Viam app</li>
-            <li>Click "Validate JSON" to check for syntax errors</li>
-            <li>Click "Update and Restart" to save changes and restart the Viam server</li>
-            <li>The server will automatically restart with the new credentials</li>
-        </ul>
-    </div>
-
-    <script>
-        function validateJSON() {
-            const textarea = document.getElementById('config');
-            try {
-                JSON.parse(textarea.value);
-                alert('JSON is valid!');
-            } catch (e) {
-                alert('Invalid JSON: ' + e.message);
-            }
-        }
-    </script>
-</body>
-</html>'''
 
 
 def main():
