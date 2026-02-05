@@ -55,7 +55,7 @@ VIEWER_PID=$!
 if [ -f /etc/viam.json ]; then
     echo ""
     echo "Starting viam-server..."
-    /usr/local/bin/viam-server.AppImage --appimage-extract-and-run -config /etc/viam.json &
+    /usr/local/bin/viam-server -config /etc/viam.json &
     VIAM_PID=$!
     echo "viam-server started with PID $VIAM_PID"
 else

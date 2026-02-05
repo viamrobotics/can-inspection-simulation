@@ -1,0 +1,3 @@
+#!/command/execlineb -P
+foreground { sleep 10 }
+gz service -s /world/cylinder_inspection/control --reqtype gz.msgs.WorldControl --reptype gz.msgs.Boolean --timeout 2000 --req "pause: false"

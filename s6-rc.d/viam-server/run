@@ -1,0 +1,4 @@
+#!/command/execlineb -P
+if { test -f /etc/viam.json }
+foreground { sleep 10 }
+/usr/local/bin/viam-server -config /etc/viam.json
