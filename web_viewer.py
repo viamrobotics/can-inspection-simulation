@@ -295,7 +295,7 @@ def update_config():
         # Restart viam-server via s6
         restart_viam_server()
 
-        flash('Configuration updated successfully. Viam server is restarting...', 'success')
+        flash('Configuration updated successfully. Viam server will restart.', 'success')
         return redirect(url_for('config_page'))
 
     except Exception as e:
