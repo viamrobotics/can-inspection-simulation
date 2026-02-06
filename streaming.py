@@ -40,9 +40,10 @@ def generate_mp4_stream(frame_generator, width, height, framerate=30):
         '-profile:v', 'baseline',  # Browser-compatible profile
         '-level', '3.0',            # Widely supported level
         '-pix_fmt', 'yuv420p',      # Standard web video chroma format
-        '-g', str(int(framerate)),  # Keyframe every 1 second
+        '-g', '15',                 # Keyframe every 0.5 seconds (smaller fragments)
         '-f', 'mp4',
-        '-movflags', 'frag_keyframe+empty_moov+default_base_moof',
+        '-movflags', 'frag_keyframe+empty_moov+default_base_moof+frag_every_frame',
+        '-reset_timestamps', '1',   # Reset timestamps for each fragment
         '-'  # stdout
     ]
 

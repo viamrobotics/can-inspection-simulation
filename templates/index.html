@@ -3,6 +3,7 @@
 <head>
     <title>{{ title }}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <link href="https://vjs.zencdn.net/8.10.0/video-js.css" rel="stylesheet">
 </head>
 <body>
     <div class="nav">
@@ -18,11 +19,65 @@
                 <span class="topic">{{ cam.topic }}</span>
             </div>
             <div class="camera-feed">
-                <video src="/video/{{ key }}" autoplay muted playsinline style="width: 100%; height: auto;"></video>
+                <video id="video-{{ key }}" class="video-js vjs-default-skin" autoplay muted playsinline></video>
             </div>
             <div class="camera-description">{{ cam.description }}</div>
         </div>
         {% endfor %}
     </div>
+
+    <script src="https://vjs.zencdn.net/8.10.0/video.min.js"></script>
+    <script>
+        // Initialize video.js for each camera
+        const cameras = {{ cameras.keys() | list | tojson }};
+        const players = {};
+
+        cameras.forEach(camera => {
+            const player = videojs(`video-${camera}`, {
+                autoplay: true,
+                muted: true,
+                controls: true,
+                fluid: true,
+                liveui: true,
+                html5: {
+                    vhs: {
+                        overrideNative: true
+                    }
+                }
+            });
+
+            player.src({
+                src: `/video/${camera}`,
+                type: 'video/mp4'
+            });
+
+            // Auto-retry on error
+            let retryCount = 0;
+            player.on('error', function() {
+                if (retryCount < 3) {
+                    retryCount++;
+                    console.log(`${camera}: Retrying... (${retryCount}/3)`);
+                    setTimeout(() => {
+                        player.src({ src: `/video/${camera}`, type: 'video/mp4' });
+                        player.load();
+                        player.play();
+                    }, 2000);
+                } else {
+                    console.error(`${camera}: Stream failed after 3 retries`);
+                }
+            });
+
+            player.on('playing', () => {
+                retryCount = 0; // Reset on success
+            });
+
+            players[camera] = player;
+        });
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            Object.values(players).forEach(p => p.dispose());
+        });
+    </script>
 </body>
 </html>

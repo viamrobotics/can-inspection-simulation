@@ -108,6 +108,7 @@ def index():
     <html>
     <head>
         <title>Video Streaming Test</title>
+        <link href="https://vjs.zencdn.net/8.10.0/video-js.css" rel="stylesheet">
         <style>
             body {
                 background: #222;
@@ -119,14 +120,18 @@ def index():
                 justify-content: center;
                 min-height: 100vh;
                 margin: 0;
+                padding: 20px;
             }
             h1 {
                 margin-bottom: 20px;
             }
-            video {
-                border: 2px solid #666;
-                border-radius: 8px;
+            .video-container {
+                width: 800px;
                 max-width: 90vw;
+            }
+            .video-js {
+                width: 100%;
+                height: 600px;
             }
             .info {
                 margin-top: 20px;
@@ -140,28 +145,126 @@ def index():
                 padding: 2px 6px;
                 border-radius: 3px;
             }
+            .status {
+                margin-top: 10px;
+                padding: 10px;
+                background: #444;
+                border-radius: 4px;
+                font-size: 12px;
+            }
+            .status.error {
+                background: #631;
+            }
         </style>
     </head>
     <body>
         <h1>Video Streaming Test - Clock Animation</h1>
-        <video src="/video" autoplay muted playsinline controls style="width: 800px; height: 600px;"></video>
+
+        <div class="video-container">
+            <video id="video" class="video-js vjs-default-skin" autoplay muted playsinline></video>
+        </div>
+
+        <div class="status" id="status">Initializing...</div>
+
         <div class="info">
             <h3>Test Info:</h3>
             <ul>
                 <li>Resolution: 800x600</li>
                 <li>Target FPS: 30</li>
                 <li>Codec: H.264 (Baseline profile)</li>
-                <li>Format: Fragmented MP4</li>
+                <li>Format: Fragmented MP4 with video.js</li>
+                <li>Buffer management: Automatic</li>
             </ul>
             <p>This test stream generates a simple clock animation locally. Use this to test:</p>
             <ul>
                 <li>Video playback smoothness</li>
-                <li>Encoding performance</li>
+                <li>Long-running stream stability</li>
                 <li>Browser compatibility</li>
-                <li>Different ffmpeg parameters</li>
+                <li>Buffer management (no frame skipping!)</li>
             </ul>
             <p>To modify settings, edit <code>stream_test.py</code> and <code>streaming.py</code></p>
         </div>
+
+        <script src="https://vjs.zencdn.net/8.10.0/video.min.js"></script>
+        <script>
+            const statusEl = document.getElementById('status');
+            let retryCount = 0;
+            const maxRetries = 3;
+
+            function updateStatus(msg, isError = false) {
+                statusEl.textContent = msg;
+                statusEl.className = 'status' + (isError ? ' error' : '');
+                console.log(msg);
+            }
+
+            // Initialize video.js player
+            const player = videojs('video', {
+                autoplay: true,
+                muted: true,
+                controls: true,
+                fluid: false,
+                liveui: true,
+                html5: {
+                    vhs: {
+                        overrideNative: true
+                    }
+                }
+            });
+
+            // Set the source
+            player.src({
+                src: '/video',
+                type: 'video/mp4'
+            });
+
+            // Event handlers
+            player.on('loadstart', () => {
+                updateStatus('Loading stream...');
+            });
+
+            player.on('playing', () => {
+                updateStatus('✓ Stream playing - Buffer managed by video.js');
+                retryCount = 0;
+            });
+
+            player.on('waiting', () => {
+                updateStatus('Buffering...');
+            });
+
+            player.on('error', function() {
+                const error = player.error();
+                updateStatus(`Error: ${error.message} (Code: ${error.code})`, true);
+
+                // Retry logic
+                if (retryCount < maxRetries) {
+                    retryCount++;
+                    updateStatus(`Retrying... (${retryCount}/${maxRetries})`);
+                    setTimeout(() => {
+                        player.src({ src: '/video', type: 'video/mp4' });
+                        player.load();
+                        player.play();
+                    }, 2000);
+                } else {
+                    updateStatus(`Stream failed after ${maxRetries} retries`, true);
+                }
+            });
+
+            // Monitor buffer health
+            setInterval(() => {
+                const buffered = player.buffered();
+                if (buffered.length > 0 && player.paused() === false) {
+                    const bufferEnd = buffered.end(buffered.length - 1);
+                    const currentTime = player.currentTime();
+                    const bufferSize = bufferEnd - currentTime;
+                    updateStatus(`✓ Playing | Buffer: ${bufferSize.toFixed(1)}s`);
+                }
+            }, 2000);
+
+            // Cleanup
+            window.addEventListener('beforeunload', () => {
+                player.dispose();
+            });
+        </script>
     </body>
     </html>
     """
