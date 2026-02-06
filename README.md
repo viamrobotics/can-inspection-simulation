@@ -62,7 +62,7 @@ Station 2 has a distinct visual style (yellow rails, orange reject bin, blue out
 ```bash
 docker run --name inspection-station2 -d \
   -p 8080:8080 -p 8081:8081 -p 8443:8443 \
-  --entrypoint /entrypoint_station2.sh \
+  -e STATION=2 \
   can-inspection-sim
 ```
 
@@ -115,8 +115,6 @@ docker run --name inspection-station2 -d \
 ```
 can-inspection-simulation/
 ├── Dockerfile                    # Container build
-├── entrypoint.sh                # Station 1 startup
-├── entrypoint_station2.sh       # Station 2 startup
 ├── can_spawner.py               # Conveyor belt controller
 ├── web_viewer.py                # Browser camera viewer
 ├── worlds/

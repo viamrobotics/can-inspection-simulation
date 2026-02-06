@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ title }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+</head>
+<body>
+    <div class="nav">
+        <a href="/config">⚙ Configuration</a>
+    </div>
+    <h1>{{ heading }}</h1>
+    <p class="subtitle">Simulated conveyor belt inspection system</p>
+    <div class="camera-grid">
+        {% for key, cam in cameras.items() %}
+        <div class="camera-card">
+            <div class="camera-header">
+                <span>{{ cam.label }}</span>
+                <span class="topic">{{ cam.topic }}</span>
+            </div>
+            <div class="camera-feed">
+                <img src="/stream/{{ key }}" alt="{{ cam.label }}">
+            </div>
+            <div class="camera-description">{{ cam.description }}</div>
+        </div>
+        {% endfor %}
+    </div>
+</body>
+</html>
