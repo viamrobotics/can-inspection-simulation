@@ -42,6 +42,7 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Python dependencies for Viam module and web viewer
+# todo: use uv so these match what we're using outside the container for testing
 RUN pip3 install viam-sdk Pillow flask numpy psutil requests urllib3
 
 # Install ffmpeg for video streaming support

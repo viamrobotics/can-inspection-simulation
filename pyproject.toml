@@ -1,3 +1,16 @@
+[project]
+name = "can-inspection-simulation"
+version = "0.0.1"
+dependencies = [
+    "flask>=3.1.2",
+    "numpy>=2.4.2",
+    "pillow>=12.1.0",
+    "psutil>=7.2.2",
+    "requests>=2.32.5",
+    "urllib3>=2.6.3",
+    "viam-sdk>=0.68.0",
+]
+
 [tool.ruff]
 # Minimal configuration - catch egregious errors only
 

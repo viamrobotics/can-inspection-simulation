@@ -14,7 +14,6 @@ import io
 import os
 import time
 import threading
-import subprocess
 import json
 import signal
 from flask import Flask, Response, request, render_template, redirect, url_for, flash, jsonify
@@ -25,6 +24,7 @@ import urllib3
 from gz.transport13 import Node
 from gz.msgs10.image_pb2 import Image as GzImage
 from PIL import Image
+from streaming import generate_mp4_stream
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('FLASK_SECRET_KEY', 'dev-secret-key-change-in-production')
@@ -97,6 +97,21 @@ def generate_stream(camera_key):
         time.sleep(FRAME_DELAY)
 
 
+def generate_camera_frames(camera_key):
+    """
+    Generator that yields frames from camera state.
+    Used by the streaming module.
+    """
+    while True:
+        with camera_state[camera_key]["lock"]:
+            frame = camera_state[camera_key]["frame"]
+
+        if frame is not None:
+            yield frame
+
+        time.sleep(FRAME_DELAY)
+
+
 def generate_video_stream(camera_key):
     """
     Generator that encodes frames to H.264 video using ffmpeg.
@@ -112,84 +127,13 @@ def generate_video_stream(camera_key):
     img = Image.open(io.BytesIO(first_frame))
     width, height = img.size
 
-    # Start ffmpeg process to encode to H.264
-    # Using fragmented MP4 for browser compatibility
-    ffmpeg_cmd = [
-        'ffmpeg',
-        '-f', 'rawvideo',
-        '-pix_fmt', 'rgb24',
-        '-s', f'{width}x{height}',
-        '-r', str(FRAMERATE),
-        '-i', '-',  # stdin
-        '-c:v', 'libx264',
-        '-preset', 'ultrafast',
-        '-tune', 'zerolatency',
-        '-profile:v', 'baseline',  # Browser-compatible profile
-        '-level', '3.0',            # Widely supported level
-        '-pix_fmt', 'yuv420p',      # Standard web video chroma format
-        '-g', str(int(FRAMERATE)),  # Keyframe every 1 second
-        '-f', 'mp4',
-        '-movflags', 'frag_keyframe+empty_moov+default_base_moof',
-        '-'  # stdout
-    ]
-
-    try:
-        process = subprocess.Popen(
-            ffmpeg_cmd,
-            stdin=subprocess.PIPE,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.DEVNULL,
-            bufsize=10**8
-        )
-
-        def write_frames():
-            """Background thread to write frames to ffmpeg."""
-            last_time = time.time()
-            while True:
-                try:
-                    current_time = time.time()
-                    elapsed = current_time - last_time
-
-                    # Maintain target framerate
-                    if elapsed < FRAME_DELAY:
-                        time.sleep(FRAME_DELAY - elapsed)
-
-                    with camera_state[camera_key]["lock"]:
-                        frame = camera_state[camera_key]["frame"]
-
-                    if frame is not None:
-                        img = Image.open(io.BytesIO(frame))
-                        rgb_data = img.tobytes()
-                        process.stdin.write(rgb_data)
-                        process.stdin.flush()
-
-                    last_time = time.time()
-                except (BrokenPipeError, IOError):
-                    break
-                except Exception as e:
-                    print(f"Error writing frame to ffmpeg: {e}")
-                    break
-
-        writer_thread = threading.Thread(target=write_frames, daemon=True)
-        writer_thread.start()
-
-        # Read and yield encoded video chunks
-        while True:
-            chunk = process.stdout.read(4096)
-            if not chunk:
-                break
-            yield chunk
-
-    except Exception as e:
-        print(f"Error in video stream: {e}")
-    finally:
-        try:
-            process.stdin.close()
-            process.stdout.close()
-            process.terminate()
-            process.wait(timeout=2)
-        except:
-            pass
+    # Use the streaming module for encoding
+    return generate_mp4_stream(
+        generate_camera_frames(camera_key),
+        width,
+        height,
+        FRAMERATE
+    )
 
 
 
