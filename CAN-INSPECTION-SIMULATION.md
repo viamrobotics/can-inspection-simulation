@@ -161,7 +161,6 @@ UPDATE_INTERVAL = 0.05  # Seconds between position updates (20 Hz)
 | `models/can_dented/model.config` | Model metadata |
 | `can_spawner.py` | Python script that manages can pool and movement |
 | `web_viewer.py` | Flask app that streams camera feeds to browser |
-| `s6-rc.d/` | s6-overlay service definitions for process supervision |
 | `viam-config.json` | Viam configuration for this scenario |
 | `Dockerfile` | Container build definition |
 

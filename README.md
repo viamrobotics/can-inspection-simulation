@@ -115,7 +115,6 @@ docker run --name inspection-station2 -d \
 ```
 can-inspection-simulation/
 ├── Dockerfile                    # Container build
-├── s6-rc.d/                     # s6-overlay service definitions
 ├── can_spawner.py               # Conveyor belt controller
 ├── web_viewer.py                # Browser camera viewer
 ├── worlds/
