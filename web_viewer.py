@@ -124,6 +124,10 @@ def generate_video_stream(camera_key):
         '-c:v', 'libx264',
         '-preset', 'ultrafast',
         '-tune', 'zerolatency',
+        '-profile:v', 'baseline',  # Browser-compatible profile
+        '-level', '3.0',            # Widely supported level
+        '-pix_fmt', 'yuv420p',      # Standard web video chroma format
+        '-g', str(int(FRAMERATE)),  # Keyframe every 1 second
         '-f', 'mp4',
         '-movflags', 'frag_keyframe+empty_moov+default_base_moof',
         '-'  # stdout
