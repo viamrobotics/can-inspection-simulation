@@ -1,5 +1,4 @@
-# Gazebo Harmonic POC for Viam Camera Bridge
-FROM ubuntu:22.04
+FROM nvidia/opengl:1.2-glvnd-runtime-ubuntu22.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 # Required for protobuf compatibility with gz-msgs
@@ -21,11 +20,16 @@ RUN apt-get update && apt-get install -y \
     && apt-get install -y gz-harmonic \
     && rm -rf /var/lib/apt/lists/*
 
-# Install xvfb for headless rendering (required for camera sensors)
+# Install EGL libraries for headless GPU rendering
 RUN apt-get update && apt-get install -y \
-    xvfb \
-    mesa-utils \
+    libegl1-mesa \
+    libegl1 \
     libgl1-mesa-glx \
+    libgl1 \
+    libglvnd0 \
+    libglx0 \
+    libvulkan1 \
+    mesa-vulkan-drivers \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Python and gz-transport bindings

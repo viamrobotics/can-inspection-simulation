@@ -113,7 +113,7 @@ def generate_video_stream(camera_key):
     width, height = img.size
 
     # Start ffmpeg process to encode to H.264
-    # Using -f rawvideo for input, outputting to mpegts for streaming
+    # Using fragmented MP4 for browser compatibility
     ffmpeg_cmd = [
         'ffmpeg',
         '-f', 'rawvideo',
@@ -124,7 +124,8 @@ def generate_video_stream(camera_key):
         '-c:v', 'libx264',
         '-preset', 'ultrafast',
         '-tune', 'zerolatency',
-        '-f', 'mpegts',
+        '-f', 'mp4',
+        '-movflags', 'frag_keyframe+empty_moov+default_base_moof',
         '-'  # stdout
     ]
 
@@ -221,7 +222,7 @@ def video(camera):
         return "Camera not found", 404
     return Response(
         generate_video_stream(camera),
-        mimetype='video/mp2t'
+        mimetype='video/mp4'
     )
 
 
