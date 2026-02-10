@@ -32,7 +32,6 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Install rendering dependencies (GPU for cloud, CPU+xvfb for local)
-ARG BUILD_MODE
 RUN if [ "$BUILD_MODE" = "local" ]; then \
         apt-get update && apt-get install -y \
             xvfb \
