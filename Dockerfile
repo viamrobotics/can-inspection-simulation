@@ -69,7 +69,8 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Install viam-server native binary (stable v0.112.0)
-RUN curl -fsSL https://storage.googleapis.com/packages.viam.com/apps/viam-server/viam-server-v0.112.0-x86_64 \
+# Use uname -m to get architecture (x86_64 or aarch64)
+RUN curl -fsSL https://storage.googleapis.com/packages.viam.com/apps/viam-server/viam-server-v0.112.0-$(uname -m) \
     -o /usr/local/bin/viam-server \
     && chmod +x /usr/local/bin/viam-server
 
