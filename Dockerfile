@@ -1,8 +1,19 @@
-FROM nvidia/opengl:1.2-glvnd-runtime-ubuntu22.04
+# Build arg to control local vs cloud mode (values: "local" or "cloud")
+# Default to local for easier local development
+ARG BUILD_MODE=local
+
+# Use Ubuntu base for local (CPU-only), NVIDIA base for cloud (GPU)
+FROM ubuntu:22.04 AS local
+FROM nvidia/opengl:1.2-glvnd-runtime-ubuntu22.04 AS cloud
+
+FROM ${BUILD_MODE} AS base
 
 ENV DEBIAN_FRONTEND=noninteractive
 # Required for protobuf compatibility with gz-msgs
 ENV PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
+# Set LOCAL_MODE env var for runtime (values: "local" or "cloud")
+ARG BUILD_MODE
+ENV LOCAL_MODE=${BUILD_MODE}
 
 RUN apt-get update && apt-get install -y \
     supervisor \
@@ -20,17 +31,26 @@ RUN apt-get update && apt-get install -y \
     && apt-get install -y gz-harmonic \
     && rm -rf /var/lib/apt/lists/*
 
-# Install EGL libraries for headless GPU rendering
-RUN apt-get update && apt-get install -y \
-    libegl1-mesa \
-    libegl1 \
-    libgl1-mesa-glx \
-    libgl1 \
-    libglvnd0 \
-    libglx0 \
-    libvulkan1 \
-    mesa-vulkan-drivers \
-    && rm -rf /var/lib/apt/lists/*
+# Install rendering dependencies (GPU for cloud, CPU+xvfb for local)
+ARG BUILD_MODE
+RUN if [ "$BUILD_MODE" = "local" ]; then \
+        apt-get update && apt-get install -y \
+            xvfb \
+            mesa-utils \
+            libgl1-mesa-glx \
+            && rm -rf /var/lib/apt/lists/*; \
+    else \
+        apt-get update && apt-get install -y \
+            libegl1-mesa \
+            libegl1 \
+            libgl1-mesa-glx \
+            libgl1 \
+            libglvnd0 \
+            libglx0 \
+            libvulkan1 \
+            mesa-vulkan-drivers \
+            && rm -rf /var/lib/apt/lists/*; \
+    fi
 
 # Install Python and gz-transport bindings
 RUN apt-get update && apt-get install -y \
@@ -79,6 +99,10 @@ COPY models/ /opt/models/
 
 # Set Gazebo resource path for custom models
 ENV GZ_SIM_RESOURCE_PATH=/opt/models
+
+# Copy configuration script for local/cloud mode
+COPY configure_worlds.sh /opt/configure_worlds.sh
+RUN chmod +x /opt/configure_worlds.sh
 
 # Copy web viewer, spawner, and training capture script
 COPY web_viewer.py /opt/web_viewer.py

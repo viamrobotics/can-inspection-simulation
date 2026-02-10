@@ -8,7 +8,8 @@ env:
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
-  build-and-push:
+  build-and-push-cloud:
+    name: Build Cloud Image (GPU)
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -39,8 +40,50 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=gha,scope=cloud
+          cache-to: type=gha,mode=max,scope=cloud
           platforms: linux/amd64
+          build-args: |
+            BUILD_MODE=cloud
 
-      - run: echo ${{ steps.docker_build.outputs.digest }}
+      - run: echo "Cloud image digest:" ${{ steps.docker_build.outputs.digest }}
+
+  build-and-push-local:
+    name: Build Local Image (CPU, multi-arch)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - id: meta-local
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch,suffix=-local
+            type=ref,event=pr,suffix=-local
+            type=sha,prefix={{branch}}-,suffix=-local
+            type=raw,value=latest-local,enable={{is_default_branch}}
+
+      - uses: docker/build-push-action@v5
+        id: docker_build_local
+        with:
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta-local.outputs.tags }}
+          labels: ${{ steps.meta-local.outputs.labels }}
+          cache-from: type=gha,scope=local
+          cache-to: type=gha,mode=max,scope=local
+          platforms: linux/amd64,linux/arm64
+          build-args: |
+            BUILD_MODE=local
+
+      - run: echo "Local image digest:" ${{ steps.docker_build_local.outputs.digest }}
