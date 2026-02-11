@@ -22,11 +22,14 @@
         {% endif %}
     {% endwith %}
 
-    <div class="status stopped"
+    <div class="status-container"
          hx-get="/api/viam-running"
          hx-trigger="load, every 1s"
-         hx-swap="outerHTML">
-        <strong>Viam Server Status:</strong> Loading...
+         hx-swap="innerHTML"
+         hx-on::error="this.innerHTML='<div class=\'status stopped\'><strong>Viam Server Status:</strong> <span style=\'color: red;\'>Connection Error</span></div>'">
+        <div class="status stopped">
+            <strong>Viam Server Status:</strong> Loading...
+        </div>
     </div>
 
     <div class="form-container">
