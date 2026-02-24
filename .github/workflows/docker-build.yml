@@ -25,6 +25,7 @@ jobs:
         with:
           workload_identity_provider: projects/386717631643/locations/global/workloadIdentityPools/github-actions-cans/providers/github-oidc
           service_account: github-actions-cans@developer-advocacy-359616.iam.gserviceaccount.com
+          token_format: access_token
 
       - uses: docker/login-action@v3
         with:
