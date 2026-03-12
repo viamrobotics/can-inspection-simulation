@@ -28,3 +28,7 @@ Thumbs.db
 
 # Local config (users should create their own)
 *-viam.json
+
+# Claude Code
+.claude/worktrees
+.claude/settings.local.json
