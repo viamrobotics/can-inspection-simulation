@@ -24,5 +24,19 @@
         </div>
         {% endfor %}
     </div>
+    <script>
+    // Reconnect MJPEG streams on error with exponential backoff
+    document.querySelectorAll('.camera-feed img').forEach(function(img) {
+        var baseUrl = img.src.split('?')[0];
+        var delay = 1000;
+        img.addEventListener('error', function() {
+            setTimeout(function() {
+                img.src = baseUrl + '?t=' + Date.now();
+                delay = Math.min(delay * 2, 10000);
+            }, delay);
+        });
+        img.addEventListener('load', function() { delay = 1000; });
+    });
+    </script>
 </body>
 </html>

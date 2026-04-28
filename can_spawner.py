@@ -196,9 +196,19 @@ def main():
     log(f"  Update rate: {1/UPDATE_INTERVAL:.0f} Hz")
     log("=" * 50)
 
-    # Wait for Gazebo to be ready
+    # Wait for Gazebo's EntityFactory service to be ready
     log("Waiting for Gazebo...")
-    time.sleep(5)
+    for attempt in range(60):
+        result = subprocess.run(
+            ["gz", "service", "-l"],
+            capture_output=True, text=True, timeout=5,
+        )
+        if f"/world/{WORLD_NAME}/create" in result.stdout:
+            log(f"Gazebo ready after {attempt + 1} attempts")
+            break
+        time.sleep(2)
+    else:
+        log("WARNING: Gazebo service not detected after 120s, attempting spawns anyway")
 
     # Initialize the can pool
     pool = CanPool()
